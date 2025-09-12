@@ -301,7 +301,7 @@
 
   /* -------------------- Load conversation -------------------- */
   async function loadConversation(id, mode) {
-    // Không clear chatBox nữa
+    // Không clear toàn bộ chat, chỉ đổi title và info
     chatTitle.textContent = "Đang tải...";
     infoBox.innerHTML = "";
 
@@ -309,14 +309,16 @@
     const data = await res.json();
 
     if (data.success) {
+      // Giữ nguyên tin nhắn cũ trong chatBox
       activeConversationId = mode === "ai" ? id : null;
       activeDoctorConversationId = mode === "doctor" ? id : null;
       activeMode = mode;
 
       chatTitle.textContent = mode === "ai" ? "Chatbot AI" : `Bác sĩ ${data.doctor?.name || ""}`;
 
-      // Lấy 20 tin cuối (bỏ system), rồi append tiếp vào chatBox
-      const msgs = data.messages.filter(m => m.role === 'assistant' || m.role === 'user').slice(-20);
+      // render lại lịch sử nhưng KHÔNG xoá chatBox → append tiếp các message còn thiếu
+      const msgs = data.messages.filter(m => m.role === 'assistant' || m.role === 'user');
+      chatBox.innerHTML = ""; // Nếu bạn muốn clear toàn bộ cũ rồi load lại
       msgs.forEach(m => addMessage(m.role, m.content));
     } else {
       addMessage("assistant", "❌ Lỗi tải hội thoại.");
