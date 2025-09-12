@@ -178,8 +178,13 @@
           const data = await res.json();
           if (data.success) {
             activeConversationId = data.conversation._id;
-            const lastMsg = data.conversation.messages[data.conversation.messages.length - 1];
-            if (lastMsg.role === "assistant") addMessage("assistant", lastMsg.content);
+            // render lại lời chào assistant đầu tiên
+            const greeting = data.conversation.messages[0];
+            if (greeting?.role === "assistant") addMessage("assistant", greeting.content);
+
+            // render reply mới nhất của AI
+            const aiReply = data.conversation.messages[data.conversation.messages.length - 1];
+            if (aiReply?.role === "assistant") addMessage("assistant", aiReply.content);
           } else {
             addMessage("assistant", "❌ Không tạo được hội thoại: " + data.error);
           }
