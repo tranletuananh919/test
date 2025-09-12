@@ -123,22 +123,12 @@
   /* -------------------- Start conversation -------------------- */
   async function startNewConversation(mode, doctorId = null) {
     if (mode === "ai") {
-      const res = await fetch(`${API_URL}/conversation`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        // Backend trả về conversation object
-        activeConversationId = data.conversation?._id || data.id; 
-        activeDoctorConversationId = null;
-        activeMode = "ai";
-        clearChat("Chatbot AI", "<p>Chat với AI 🤖 để được hỗ trợ.</p>");
-        addMessage("assistant", "Xin chào, tôi là Chatbot AI 🤖. Bạn cần gì?");
-      } else {
-        infoBox.innerHTML = `<p class="text-red-600">Không tạo được hội thoại AI: ${data.error}</p>`;
-      }
+      // Không gọi API ngay, chỉ hiển thị chào trước
+      activeConversationId = null; // chưa có id DB
+      activeDoctorConversationId = null;
+      activeMode = "ai";
+      clearChat("Chatbot AI", "<p>Chat với AI 🤖 để được hỗ trợ.</p>");
+      addMessage("assistant", "Xin chào, tôi là Chatbot AI 🤖. Bạn cần gì?");
     }
 
     else if (mode === "doctor" && doctorId) {
@@ -167,6 +157,7 @@
     }
   }
 
+
   /* -------------------- Send message -------------------- */
   async function sendMessage() {
     const text = input.value.trim();
@@ -176,24 +167,42 @@
     input.value = "";
 
     try {
-      if (activeMode === "ai" && activeConversationId) {
-        const res = await fetch(`${API_URL}/chat/${activeConversationId}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question: text }),
-        });
-        const data = await res.json();
-        addMessage("assistant", data.success ? data.answer : "❌ Lỗi: " + data.error);
+      if (activeMode === "ai") {
+        if (!activeConversationId) {
+          // lần đầu -> tạo hội thoại
+          const res = await fetch(`${API_URL}/conversation`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId, firstMessage: text }),
+          });
+          const data = await res.json();
+          if (data.success) {
+            activeConversationId = data.conversation._id;
+            const lastMsg = data.conversation.messages[data.conversation.messages.length - 1];
+            if (lastMsg.role === "assistant") addMessage("assistant", lastMsg.content);
+          } else {
+            addMessage("assistant", "❌ Không tạo được hội thoại: " + data.error);
+          }
+        } else {
+          // đã có id thì chat tiếp
+          const res = await fetch(`${API_URL}/chat/${activeConversationId}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question: text }),
+          });
+          const data = await res.json();
+          addMessage("assistant", data.success ? data.answer : "❌ Lỗi: " + data.error);
+        }
       }
 
       if (activeMode === "doctor" && activeDoctorConversationId) {
-        const res = await fetch(`${API_URL}/doctor-chat/${activeDoctorConversationId}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question: text }),
-        });
-        const data = await res.json();
-        addMessage("assistant", data.success ? data.answer : "❌ Lỗi: " + data.error);
+          const res = await fetch(`${API_URL}/doctor-chat/${activeDoctorConversationId}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question: text }),
+          });
+          const data = await res.json();
+          addMessage("assistant", data.success ? data.answer : "❌ Lỗi: " + data.error);
       }
     } catch (err) {
       addMessage("assistant", "❌ Lỗi kết nối server.");
