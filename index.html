@@ -205,13 +205,13 @@
   }
 
   /* -------------------- Menu AI -------------------- */
-  document.getElementById("menu-ai").addEventListener("click", () => {
+  document.getElementById("menu-ai").addEventListener("click", function() {
     setActiveMenu(this);
     startNewConversation("ai");
   });
 
   /* -------------------- Menu Doctor -------------------- */
-  document.getElementById("menu-doctor").addEventListener("click", async () => {
+  document.getElementById("menu-doctor").addEventListener("click", async function() {
     setActiveMenu(this);
     const canOpen = toggleSection("doctor");
     if (!canOpen) return;
@@ -243,7 +243,7 @@
   });
 
   /* -------------------- Menu History -------------------- */
-  document.getElementById("menu-history").addEventListener("click", async () => {
+  document.getElementById("menu-history").addEventListener("click", async function() {
     setActiveMenu(this);
     const canOpen = toggleSection("history");
     if (!canOpen) return;
