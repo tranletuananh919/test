@@ -75,6 +75,12 @@
   </div>
 
 <script>
+  // Đóng tất cả các menu xổ xuống
+  function resetMenuSections() {
+    arrowDoctor.className = "fas fa-chevron-right";
+    arrowHistory.className = "fas fa-chevron-right";
+    historyBox.classList.add("hidden");
+  }
   const API_URL = "https://mediverse-backend-aichat-production.up.railway.app";
   const userId = "user001";
 
@@ -204,17 +210,20 @@
     }
   }
 
+
   /* -------------------- Menu AI -------------------- */
   document.getElementById("menu-ai").addEventListener("click", function() {
+    resetMenuSections();
     setActiveMenu(this);
     startNewConversation("ai");
   });
 
   /* -------------------- Menu Doctor -------------------- */
   document.getElementById("menu-doctor").addEventListener("click", async function() {
+    resetMenuSections();
     setActiveMenu(this);
-    const canOpen = toggleSection("doctor");
-    if (!canOpen) return;
+    // Luôn mở menu bác sĩ
+    arrowDoctor.className = "fas fa-chevron-down";
 
     clearChat("Chat với bác sĩ", "<p>Đang tải dữ liệu bác sĩ...</p>");
 
@@ -244,9 +253,11 @@
 
   /* -------------------- Menu History -------------------- */
   document.getElementById("menu-history").addEventListener("click", async function() {
+    resetMenuSections();
     setActiveMenu(this);
-    const canOpen = toggleSection("history");
-    if (!canOpen) return;
+    // Luôn mở menu lịch sử
+    arrowHistory.className = "fas fa-chevron-down";
+    historyBox.classList.remove("hidden");
 
     historyBox.innerHTML = "<p>Đang tải lịch sử...</p>";
 
