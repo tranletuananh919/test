@@ -267,13 +267,24 @@
       historyBox.innerHTML = "<p>Lỗi tải lịch sử</p>";
     return;
     }
-    historyBox.innerHTML = data.conversations.map(c => `
-      <div class="history-item p-2 mb-2 bg-gray-200 rounded flex justify-between items-center cursor-pointer hover:bg-blue-100 transition">
-        <span onclick="loadConversation('${c.id}', '${c.mode}', this)">🗨️ ${c.preview}</span>
+    historyBox.innerHTML = data.conversations.map((c, idx) => `
+      <div class="history-item p-2 mb-2 bg-gray-200 rounded flex justify-between items-center cursor-pointer transition"
+        data-id="${c.id}" data-mode="${c.mode}">
+        <span class="history-label hover:font-bold transition">🗨️ ${c.preview}</span>
         <i class="fas fa-trash text-red-500 hover:text-red-700 cursor-pointer ml-2"
           onclick="deleteConversation('${c.id}', this)"></i>
       </div>
     `).join("");
+
+    // Gán sự kiện click cho từng item để set active và load hội thoại
+    document.querySelectorAll('#history-box .history-item').forEach(item => {
+      item.addEventListener('click', function(e) {
+        // Không trigger khi bấm vào nút xóa
+        if (e.target.tagName === 'I') return;
+        setActiveHistory(this);
+        loadConversation(this.getAttribute('data-id'), this.getAttribute('data-mode'));
+      });
+    });
   });
 
   // Menu highlight
@@ -305,11 +316,16 @@
     }
   }
   
-  // History highlight
+  // History highlight: chỉ 1 item active, active thì nền xanh, chữ xanh đậm
   function setActiveHistory(el) {
-    document.querySelectorAll("#history-box .history-item")
-      .forEach(item => item.classList.remove("bg-blue-100","font-bold","text-blue-600"));
-    el.classList.add("bg-blue-100","font-bold","text-blue-600");
+    document.querySelectorAll("#history-box .history-item").forEach(item => {
+      item.classList.remove("bg-blue-100","font-bold","text-blue-600");
+      const label = item.querySelector('.history-label');
+      if (label) label.classList.remove("font-bold","text-blue-600");
+    });
+    el.classList.add("bg-blue-100");
+    const label = el.querySelector('.history-label');
+    if (label) label.classList.add("font-bold","text-blue-600");
   }
 
   // Xóa hội thoại
