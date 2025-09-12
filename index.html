@@ -189,7 +189,6 @@
     }
   }
 
-
   /* -------------------- Toggle -------------------- */
   function toggleSection(section) {
     if (section === "doctor") {
@@ -252,15 +251,23 @@
     const data = await res.json();
     if (!data.success) {
       historyBox.innerHTML = "<p>Lỗi tải lịch sử</p>";
-      return;
+    return;
     }
     historyBox.innerHTML = data.conversations.map(c => `
-      <div class='p-2 mb-2 bg-gray-200 rounded flex justify-between items-center'>
-        <span class='cursor-pointer hover:underline' onclick="loadConversation('${c.id}', '${c.mode}')">
-          🗨️ ${c.preview}
-        </span>
-      </div>`).join("");
+      <div class="history-item p-2 mb-2 bg-gray-200 rounded flex justify-between items-center cursor-pointer">
+        <span onclick="loadConversation('${c.id}', '${c.mode}', this)">🗨️ ${c.preview}</span>
+        <i class="fas fa-trash text-red-500 hover:text-red-700 cursor-pointer ml-2"
+          onclick="deleteConversation('${c.id}', this)"></i>
+      </div>
+    `).join("");
   });
+
+  // Menu highlight
+  const menuItems = document.querySelectorAll("#main-menu li");
+  function setActiveMenu(el) {
+    menuItems.forEach(item => item.classList.remove("bg-blue-600","text-white"));
+    el.classList.add("bg-blue-600","text-white");
+  }
 
   /* -------------------- Load conversation -------------------- */
   async function loadConversation(id, mode) {
@@ -283,7 +290,22 @@
       addMessage("assistant", "❌ Lỗi tải hội thoại.");
     }
   }
+  
+  // History highlight
+  function setActiveHistory(el) {
+    document.querySelectorAll("#history-box .history-item")
+      .forEach(item => item.classList.remove("bg-blue-100","font-bold","text-blue-600"));
+    el.classList.add("bg-blue-100","font-bold","text-blue-600");
+  }
 
+  // Xóa hội thoại
+  async function deleteConversation(id, el) {
+    if (!confirm("Bạn có chắc muốn xóa hội thoại này?")) return;
+    const res = await fetch(`${API_URL}/conversation/${id}`, { method: "DELETE" });
+    const data = await res.json();
+    if (data.success) el.parentElement.remove();
+    else alert("❌ Không xóa được hội thoại");
+  }
 
   /* -------------------- Send button -------------------- */
   sendBtn.addEventListener("click", sendMessage);
