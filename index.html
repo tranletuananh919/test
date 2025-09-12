@@ -74,225 +74,225 @@
     </div>
   </div>
 
-  <script>
-const API_URL = "https://mediverse-backend-aichat-production.up.railway.app";
-const userId = "user001";
+<script>
+  const API_URL = "https://mediverse-backend-aichat-production.up.railway.app";
+  const userId = "user001";
 
-let activeConversationId = null;
-let activeDoctorConversationId = null;
-let activeMode = null; // "ai" | "doctor"
+  let activeConversationId = null;
+  let activeDoctorConversationId = null;
+  let activeMode = null; // "ai" | "doctor"
 
-const chatBox = document.getElementById("chat-box");
-const input = document.getElementById("message-input");
-const sendBtn = document.getElementById("send-btn");
-const chatTitle = document.getElementById("chat-title");
-const infoBox = document.getElementById("info-box");
-const historyBox = document.getElementById("history-box");
-const arrowDoctor = document.getElementById("arrow-doctor");
-const arrowHistory = document.getElementById("arrow-history");
+  const chatBox = document.getElementById("chat-box");
+  const input = document.getElementById("message-input");
+  const sendBtn = document.getElementById("send-btn");
+  const chatTitle = document.getElementById("chat-title");
+  const infoBox = document.getElementById("info-box");
+  const historyBox = document.getElementById("history-box");
+  const arrowDoctor = document.getElementById("arrow-doctor");
+  const arrowHistory = document.getElementById("arrow-history");
 
-/* -------------------- Helpers -------------------- */
-function addMessage(role, text) {
-  const div = document.createElement("div");
-  div.className = role === "user" ? "text-right" : "text-left";
-  div.innerHTML = `
-    <div class="inline-block px-4 py-2 rounded-xl ${
-      role === "user" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-800"
-    }">${marked.parse(text)}</div>`;
-  chatBox.appendChild(div);
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-function clearChat(title, info) {
-  chatBox.innerHTML = "";
-  chatTitle.textContent = title;
-  infoBox.innerHTML = info;
-}
-
-/* -------------------- Start conversation -------------------- */
-async function startNewConversation(mode, doctorId = null) {
-  if (mode === "ai") {
-    const res = await fetch(`${API_URL}/conversation`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId }),
-    });
-    const data = await res.json();
-    if (data.success) {
-      // Backend trả về conversation object
-      activeConversationId = data.conversation?._id || data.id; 
-      activeDoctorConversationId = null;
-      activeMode = "ai";
-      clearChat("Chatbot AI", "<p>Chat với AI 🤖 để được hỗ trợ.</p>");
-      addMessage("assistant", "Xin chào, tôi là Chatbot AI 🤖. Bạn cần gì?");
-    } else {
-      infoBox.innerHTML = `<p class="text-red-600">Không tạo được hội thoại AI: ${data.error}</p>`;
-    }
+  /* -------------------- Helpers -------------------- */
+  function addMessage(role, text) {
+    const div = document.createElement("div");
+    div.className = role === "user" ? "text-right" : "text-left";
+    div.innerHTML = `
+      <div class="inline-block px-4 py-2 rounded-xl ${
+        role === "user" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-800"
+      }">${marked.parse(text)}</div>`;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
   }
 
-  else if (mode === "doctor" && doctorId) {
-    const res = await fetch(`${API_URL}/doctor-conversation`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, doctorId }),
-    });
-    const data = await res.json();
-    if (data.success) {
-      activeDoctorConversationId = data.conversation?._id || data.id;
-      activeConversationId = null;
-      activeMode = "doctor";
-      clearChat(
-        `Bác sĩ ${data.doctor?.name || ""}`,
-        `<p>Bạn đang trò chuyện với bác sĩ ${data.doctor?.name || "?"} (${data.doctor?.specialty || "?"})</p>`
-      );
-      addMessage(
-        "assistant",
-        `👨‍⚕️ Xin chào, tôi là bác sĩ ${data.doctor?.name || "?"}, chuyên khoa ${data.doctor?.specialty || "?"}. Hãy cho tôi biết triệu chứng của bạn.`
-      );
-    } else {
-      infoBox.innerHTML = `<p class="text-red-600">Không tạo được hội thoại với bác sĩ: ${data.error}</p>`;
-    }
-  }
-}
-
-/* -------------------- Send message -------------------- */
-async function sendMessage() {
-  const text = input.value.trim();
-  if (!text) return;
-
-  addMessage("user", text);
-  input.value = "";
-
-  try {
-    if (activeMode === "ai" && activeConversationId) {
-      const res = await fetch(`${API_URL}/chat/${activeConversationId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: text }),
-      });
-      const data = await res.json();
-      addMessage("assistant", data.success ? data.answer : "❌ Lỗi: " + data.error);
-    }
-
-    if (activeMode === "doctor" && activeDoctorConversationId) {
-      const res = await fetch(`${API_URL}/doctor-chat/${activeDoctorConversationId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: text }),
-      });
-      const data = await res.json();
-      addMessage("assistant", data.success ? data.answer : "❌ Lỗi: " + data.error);
-    }
-  } catch (err) {
-    addMessage("assistant", "❌ Lỗi kết nối server.");
-  }
-}
-
-
-/* -------------------- Toggle -------------------- */
-function toggleSection(section) {
-  if (section === "doctor") {
-    const isOpen = arrowDoctor.classList.contains("fa-chevron-down");
-    arrowDoctor.className = isOpen ? "fas fa-chevron-right" : "fas fa-chevron-down";
-    return !isOpen;
-  }
-  if (section === "history") {
-    const isOpen = arrowHistory.classList.contains("fa-chevron-down");
-    arrowHistory.className = isOpen ? "fas fa-chevron-right" : "fas fa-chevron-down";
-    historyBox.classList.toggle("hidden", isOpen);
-    return !isOpen;
-  }
-}
-
-/* -------------------- Menu AI -------------------- */
-document.getElementById("menu-ai").addEventListener("click", () => {
-  startNewConversation("ai");
-});
-
-/* -------------------- Menu Doctor -------------------- */
-document.getElementById("menu-doctor").addEventListener("click", async () => {
-  const canOpen = toggleSection("doctor");
-  if (!canOpen) return;
-
-  clearChat("Chat với bác sĩ", "<p>Đang tải dữ liệu bác sĩ...</p>");
-
-  const res = await fetch(`${API_URL}/doctor-info?userId=${userId}`);
-  const data = await res.json();
-  if (!data.success) {
-    infoBox.innerHTML = "<p class='text-red-600'>Không lấy được dữ liệu bác sĩ.</p>";
-    return;
-  }
-
-  let html = "<h3 class='font-bold mb-2'>Bác sĩ của bạn:</h3>";
-  data.recent.forEach(doc => {
-    html += `<div class='p-2 bg-gray-200 mb-2 rounded cursor-pointer hover:bg-gray-300'
-              onclick="startNewConversation('doctor','${doc._id}')">
-              👨‍⚕️ ${doc.name} (${doc.specialty})
-             </div>`;
-  });
-  if (data.suggested) {
-    html += `<h3 class='font-bold mt-4 mb-2'>Bác sĩ gợi ý:</h3>
-             <div class='p-2 bg-blue-100 mb-2 rounded cursor-pointer hover:bg-blue-200'
-                  onclick="startNewConversation('doctor','${data.suggested._id}')">
-                  ⭐ ${data.suggested.name} (${data.suggested.specialty})
-             </div>`;
-  }
-  infoBox.innerHTML = html;
-});
-
-/* -------------------- Menu History -------------------- */
-document.getElementById("menu-history").addEventListener("click", async () => {
-  const canOpen = toggleSection("history");
-  if (!canOpen) return;
-
-  historyBox.innerHTML = "<p>Đang tải lịch sử...</p>";
-
-  const res = await fetch(`${API_URL}/conversations/${userId}`);
-  const data = await res.json();
-  if (!data.success) {
-    historyBox.innerHTML = "<p>Lỗi tải lịch sử</p>";
-    return;
-  }
-  historyBox.innerHTML = data.conversations.map(c => `
-    <div class='p-2 mb-2 bg-gray-200 rounded flex justify-between items-center'>
-      <span class='cursor-pointer hover:underline' onclick="loadConversation('${c.id}', '${c.mode}')">
-        🗨️ ${c.preview}
-      </span>
-    </div>`).join("");
-});
-
-/* -------------------- Load conversation -------------------- */
-async function loadConversation(id, mode) {
-  clearChat("Đang tải...", "");
-  const res = await fetch(`${API_URL}/conversation/${id}`);
-  const data = await res.json();
-
-  if (data.success) {
+  function clearChat(title, info) {
     chatBox.innerHTML = "";
-    activeConversationId = mode === "ai" ? id : null;
-    activeDoctorConversationId = mode === "doctor" ? id : null;
-    activeMode = mode;
-
-    chatTitle.textContent = mode === "ai" ? "Chatbot AI" : `Bác sĩ ${data.doctor?.name || ""}`;
-
-    // chỉ lấy 20 tin cuối
-    const msgs = data.messages.slice(-20);
-    msgs.forEach(m => addMessage(m.role, m.content));
-  } else {
-    addMessage("assistant", "❌ Lỗi tải hội thoại.");
+    chatTitle.textContent = title;
+    infoBox.innerHTML = info;
   }
-}
+
+  /* -------------------- Start conversation -------------------- */
+  async function startNewConversation(mode, doctorId = null) {
+    if (mode === "ai") {
+      const res = await fetch(`${API_URL}/conversation`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Backend trả về conversation object
+        activeConversationId = data.conversation?._id || data.id; 
+        activeDoctorConversationId = null;
+        activeMode = "ai";
+        clearChat("Chatbot AI", "<p>Chat với AI 🤖 để được hỗ trợ.</p>");
+        addMessage("assistant", "Xin chào, tôi là Chatbot AI 🤖. Bạn cần gì?");
+      } else {
+        infoBox.innerHTML = `<p class="text-red-600">Không tạo được hội thoại AI: ${data.error}</p>`;
+      }
+    }
+
+    else if (mode === "doctor" && doctorId) {
+      const res = await fetch(`${API_URL}/doctor-conversation`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, doctorId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        activeDoctorConversationId = data.conversation?._id || data.id;
+        activeConversationId = null;
+        activeMode = "doctor";
+        const doctorInfo = data.doctor || data.conversation?.doctor || {};
+        clearChat(
+          `Bác sĩ ${doctorInfo.name || ""}`,
+          `<p>Bạn đang trò chuyện với bác sĩ ${doctorInfo.name || "?"} (${doctorInfo.specialty || "?"})</p>`
+        );
+        addMessage(
+          "assistant",
+          `👨‍⚕️ Xin chào, tôi là bác sĩ ${doctorInfo.name || "?"}, chuyên khoa ${doctorInfo.specialty || "?"}. Hãy cho tôi biết triệu chứng của bạn.`
+        );
+      } else {
+        infoBox.innerHTML = `<p class="text-red-600">Không tạo được hội thoại với bác sĩ: ${data.error}</p>`;
+      }
+    }
+  }
+
+  /* -------------------- Send message -------------------- */
+  async function sendMessage() {
+    const text = input.value.trim();
+    if (!text) return;
+
+    addMessage("user", text);
+    input.value = "";
+
+    try {
+      if (activeMode === "ai" && activeConversationId) {
+        const res = await fetch(`${API_URL}/chat/${activeConversationId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: text }),
+        });
+        const data = await res.json();
+        addMessage("assistant", data.success ? data.answer : "❌ Lỗi: " + data.error);
+      }
+
+      if (activeMode === "doctor" && activeDoctorConversationId) {
+        const res = await fetch(`${API_URL}/doctor-chat/${activeDoctorConversationId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: text }),
+        });
+        const data = await res.json();
+        addMessage("assistant", data.success ? data.answer : "❌ Lỗi: " + data.error);
+      }
+    } catch (err) {
+      addMessage("assistant", "❌ Lỗi kết nối server.");
+    }
+  }
 
 
-/* -------------------- Send button -------------------- */
-sendBtn.addEventListener("click", sendMessage);
-input.addEventListener("keypress", e => { if (e.key === "Enter") sendMessage(); });
+  /* -------------------- Toggle -------------------- */
+  function toggleSection(section) {
+    if (section === "doctor") {
+      const isOpen = arrowDoctor.classList.contains("fa-chevron-down");
+      arrowDoctor.className = isOpen ? "fas fa-chevron-right" : "fas fa-chevron-down";
+      return !isOpen;
+    }
+    if (section === "history") {
+      const isOpen = arrowHistory.classList.contains("fa-chevron-down");
+      arrowHistory.className = isOpen ? "fas fa-chevron-right" : "fas fa-chevron-down";
+      historyBox.classList.toggle("hidden", isOpen);
+      return !isOpen;
+    }
+  }
 
-/* -------------------- Auto mở AI khi load trang -------------------- */
-window.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("menu-ai").click();
-});
+  /* -------------------- Menu AI -------------------- */
+  document.getElementById("menu-ai").addEventListener("click", () => {
+    startNewConversation("ai");
+  });
+
+  /* -------------------- Menu Doctor -------------------- */
+  document.getElementById("menu-doctor").addEventListener("click", async () => {
+    const canOpen = toggleSection("doctor");
+    if (!canOpen) return;
+
+    clearChat("Chat với bác sĩ", "<p>Đang tải dữ liệu bác sĩ...</p>");
+
+    const res = await fetch(`${API_URL}/doctor-info?userId=${userId}`);
+    const data = await res.json();
+    if (!data.success) {
+      infoBox.innerHTML = "<p class='text-red-600'>Không lấy được dữ liệu bác sĩ.</p>";
+      return;
+    }
+
+    let html = "<h3 class='font-bold mb-2'>Bác sĩ của bạn:</h3>";
+    data.recent.forEach(doc => {
+      html += `<div class='p-2 bg-gray-200 mb-2 rounded cursor-pointer hover:bg-gray-300'
+                onclick="startNewConversation('doctor','${doc._id}')">
+                👨‍⚕️ ${doc.name} (${doc.specialty})
+              </div>`;
+    });
+    if (data.suggested) {
+      html += `<h3 class='font-bold mt-4 mb-2'>Bác sĩ gợi ý:</h3>
+              <div class='p-2 bg-blue-100 mb-2 rounded cursor-pointer hover:bg-blue-200'
+                    onclick="startNewConversation('doctor','${data.suggested._id}')">
+                    ⭐ ${data.suggested.name} (${data.suggested.specialty})
+              </div>`;
+    }
+    infoBox.innerHTML = html;
+  });
+
+  /* -------------------- Menu History -------------------- */
+  document.getElementById("menu-history").addEventListener("click", async () => {
+    const canOpen = toggleSection("history");
+    if (!canOpen) return;
+
+    historyBox.innerHTML = "<p>Đang tải lịch sử...</p>";
+
+    const res = await fetch(`${API_URL}/conversations/${userId}`);
+    const data = await res.json();
+    if (!data.success) {
+      historyBox.innerHTML = "<p>Lỗi tải lịch sử</p>";
+      return;
+    }
+    historyBox.innerHTML = data.conversations.map(c => `
+      <div class='p-2 mb-2 bg-gray-200 rounded flex justify-between items-center'>
+        <span class='cursor-pointer hover:underline' onclick="loadConversation('${c.id}', '${c.mode}')">
+          🗨️ ${c.preview}
+        </span>
+      </div>`).join("");
+  });
+
+  /* -------------------- Load conversation -------------------- */
+  async function loadConversation(id, mode) {
+    clearChat("Đang tải...", "");
+    const res = await fetch(`${API_URL}/conversation/${id}`);
+    const data = await res.json();
+
+    if (data.success) {
+      chatBox.innerHTML = "";
+      activeConversationId = mode === "ai" ? id : null;
+      activeDoctorConversationId = mode === "doctor" ? id : null;
+      activeMode = mode;
+
+      chatTitle.textContent = mode === "ai" ? "Chatbot AI" : `Bác sĩ ${data.doctor?.name || ""}`;
+
+      // chỉ lấy 20 tin cuối
+      const msgs = data.messages.slice(-20);
+      msgs.forEach(m => addMessage(m.role, m.content));
+    } else {
+      addMessage("assistant", "❌ Lỗi tải hội thoại.");
+    }
+  }
+
+
+  /* -------------------- Send button -------------------- */
+  sendBtn.addEventListener("click", sendMessage);
+  input.addEventListener("keypress", e => { if (e.key === "Enter") sendMessage(); });
+
+  /* -------------------- Auto mở AI khi load trang -------------------- */
+  window.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("menu-ai").click();
+  });
 </script>
-
 </body>
 </html>
