@@ -173,7 +173,7 @@
           const res = await fetch(`${API_URL}/conversation`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId, firstMessage: text }),
+            body: JSON.stringify({ userId, firstMessage: text }), // thêm firstMessage
           });
           const data = await res.json();
           if (data.success) {
