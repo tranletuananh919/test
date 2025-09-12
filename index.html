@@ -206,11 +206,13 @@
 
   /* -------------------- Menu AI -------------------- */
   document.getElementById("menu-ai").addEventListener("click", () => {
+    setActiveMenu(this);
     startNewConversation("ai");
   });
 
   /* -------------------- Menu Doctor -------------------- */
   document.getElementById("menu-doctor").addEventListener("click", async () => {
+    setActiveMenu(this);
     const canOpen = toggleSection("doctor");
     if (!canOpen) return;
 
@@ -242,6 +244,7 @@
 
   /* -------------------- Menu History -------------------- */
   document.getElementById("menu-history").addEventListener("click", async () => {
+    setActiveMenu(this);
     const canOpen = toggleSection("history");
     if (!canOpen) return;
 
@@ -254,7 +257,7 @@
     return;
     }
     historyBox.innerHTML = data.conversations.map(c => `
-      <div class="history-item p-2 mb-2 bg-gray-200 rounded flex justify-between items-center cursor-pointer">
+      <div class="history-item p-2 mb-2 bg-gray-200 rounded flex justify-between items-center cursor-pointer hover:bg-blue-100 transition">
         <span onclick="loadConversation('${c.id}', '${c.mode}', this)">🗨️ ${c.preview}</span>
         <i class="fas fa-trash text-red-500 hover:text-red-700 cursor-pointer ml-2"
           onclick="deleteConversation('${c.id}', this)"></i>
