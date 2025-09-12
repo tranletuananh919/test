@@ -128,7 +128,7 @@
       activeDoctorConversationId = null;
       activeMode = "ai";
       clearChat("Chatbot AI", "<p>Chat với AI 🤖 để được hỗ trợ.</p>");
-      addMessage("assistant", "Xin chào, tôi là Chatbot AI 🤖. Bạn cần gì?");
+      // addMessage("assistant", "Xin chào, tôi là Chatbot AI 🤖. Bạn cần gì?");
     }
 
     else if (mode === "doctor" && doctorId) {
@@ -169,20 +169,16 @@
     try {
       if (activeMode === "ai") {
         if (!activeConversationId) {
-          // lần đầu -> tạo hội thoại
           const res = await fetch(`${API_URL}/conversation`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId, firstMessage: text }), // thêm firstMessage
+            body: JSON.stringify({ userId, firstMessage: text }),
           });
           const data = await res.json();
           if (data.success) {
             activeConversationId = data.conversation._id;
-            // render lại lời chào assistant đầu tiên
-            const greeting = data.conversation.messages[0];
-            if (greeting?.role === "assistant") addMessage("assistant", greeting.content);
 
-            // render reply mới nhất của AI
+            // Chỉ render AI reply cuối cùng
             const aiReply = data.conversation.messages[data.conversation.messages.length - 1];
             if (aiReply?.role === "assistant") addMessage("assistant", aiReply.content);
           } else {
@@ -213,6 +209,28 @@
       addMessage("assistant", "❌ Lỗi kết nối server.");
     }
   }
+
+        //   if (!activeConversationId) {
+        //   // lần đầu -> tạo hội thoại
+        //   const res = await fetch(`${API_URL}/conversation`, {
+        //     method: "POST",
+        //     headers: { "Content-Type": "application/json" },
+        //     body: JSON.stringify({ userId, firstMessage: text }), // thêm firstMessage
+        //   });
+        //   const data = await res.json();
+        //   if (data.success) {
+        //     activeConversationId = data.conversation._id;
+        //     // render lại lời chào assistant đầu tiên
+        //     const greeting = data.conversation.messages[0];
+        //     if (greeting?.role === "assistant") addMessage("assistant", greeting.content);
+
+        //     // render reply mới nhất của AI
+        //     const aiReply = data.conversation.messages[data.conversation.messages.length - 1];
+        //     if (aiReply?.role === "assistant") addMessage("assistant", aiReply.content);
+        //   } else {
+        //     addMessage("assistant", "❌ Không tạo được hội thoại: " + data.error);
+        //   }
+        // }
 
   /* -------------------- Toggle -------------------- */
   function toggleSection(section) {
