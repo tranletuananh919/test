@@ -159,13 +159,16 @@
 
 
   /* -------------------- Send message -------------------- */
-  async function sendMessage() {
-    const text = input.value.trim();
+  async function sendMessage(forcedText = null) {
+  const text = forcedText ? forcedText.trim() : input.value.trim();
+  if (!text) return;
+
+  addMessage("user", text);
+  if (!forcedText) input.value = "";
+    //const text = input.value.trim();
     if (!text) return;
 
-    addMessage("user", text);
-    input.value = "";
-
+   
     try {
       if (activeMode === "ai") {
         if (!activeConversationId) {
@@ -367,7 +370,16 @@
   /* -------------------- Auto mở AI khi load trang -------------------- */
   window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("menu-ai").click();
+    // FAQ click -> tự gửi
+document.querySelectorAll(".faq-item").forEach(item => {
+  item.addEventListener("click", () => {
+    const question = item.textContent.trim();
+    sendMessage(question);
   });
+});
+
+  });
+  
 </script>
 </body>
 </html>
