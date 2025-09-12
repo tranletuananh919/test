@@ -308,8 +308,8 @@
 
       chatTitle.textContent = mode === "ai" ? "Chatbot AI" : `Bác sĩ ${data.doctor?.name || ""}`;
 
-      // chỉ lấy 20 tin cuối
-      const msgs = data.messages.slice(-20);
+      // chỉ lấy 20 tin cuối, BỎ QUA message role system
+      const msgs = data.messages.filter(m => m.role === 'assistant' || m.role === 'user').slice(-20);
       msgs.forEach(m => addMessage(m.role, m.content));
     } else {
       addMessage("assistant", "❌ Lỗi tải hội thoại.");
